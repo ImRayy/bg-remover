@@ -7,6 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { REMBG_MODEL_OPTIONS } from "@/constants/models";
 import { downloadImage } from "@/utils/image";
 
 export const Route = createFileRoute("/")({
@@ -20,6 +21,7 @@ function App() {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [canDownload, setCanDownload] = useState(false);
+	const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
 	const handleFile = (file: File) => {
 		if (!file.type.startsWith("image/")) return;
@@ -59,6 +61,10 @@ function App() {
 			const formData = new FormData();
 			formData.append("file", file);
 
+			if (selectedModel) {
+				formData.append("model", selectedModel);
+			}
+
 			const response = await fetch(
 				"http://localhost:8000/api/remove-background",
 				{
@@ -90,96 +96,121 @@ function App() {
 
 	return (
 		<div className="min-h-screen items-center justify-center flex w-full">
-			<form
-				onSubmit={submit}
-				className="card w-full max-w-xl flex  justify-center border min-h-96  border-dashed border-base-content/30 bg-base-200 p-8"
-			>
-				{!file && (
-					// biome-ignore lint/a11y/noStaticElementInteractions: false
-					<div
-						className={`flex flex-col items-center gap-4 rounded-lg transition
-            ${isDragging ? "border-primary" : "border-base-content/30"}`}
-						onDragOver={(e) => {
-							e.preventDefault();
-							setIsDragging(true);
-						}}
-						onDragLeave={() => setIsDragging(false)}
-						onDrop={handleDrop}
-					>
-						<HugeiconsIcon icon={Image01Icon} size={48} />
-						<p className="text-base-content/60 text-center">
-							Click to upload or drag and drop
+			<div className="w-full flex items-end gap-3 flex-col max-w-xl ">
+				<div className="inline-flex justify-between w-full items-center">
+					{file ? (
+						<p className="text-sm text-base-content/60 text-center">
+							{file.name}
 						</p>
+					) : (
+						<div></div>
+					)}
+					<select
+						defaultValue=""
+						className="select h-8 max-w-38 rounded-xl"
+						onChange={(e) => {
+							setSelectedModel(e.target.value);
+						}}
+					>
+						<option value="" disabled>
+							Pick model
+						</option>
 
-						<input
-							ref={fileInputRef}
-							type="file"
-							accept="image/*"
-							className="hidden"
-							onChange={handleInputChange}
-						/>
-
-						<button
-							type="button"
-							className="btn btn-primary rounded-full"
-							onClick={() => fileInputRef.current?.click()}
+						{REMBG_MODEL_OPTIONS.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+				</div>
+				<form
+					onSubmit={submit}
+					className="card w-full flex  justify-center border min-h-96  border-dashed border-base-content/30 bg-base-200 p-8"
+				>
+					{!file && (
+						// biome-ignore lint/a11y/noStaticElementInteractions: false
+						<div
+							className={`flex flex-col items-center gap-4 rounded-lg transition
+            ${isDragging ? "border-primary" : "border-base-content/30"}`}
+							onDragOver={(e) => {
+								e.preventDefault();
+								setIsDragging(true);
+							}}
+							onDragLeave={() => setIsDragging(false)}
+							onDrop={handleDrop}
 						>
-							Select Image
-						</button>
-					</div>
-				)}
+							<HugeiconsIcon icon={Image01Icon} size={48} />
+							<p className="text-base-content/60 text-center">
+								Click to upload or drag and drop
+							</p>
 
-				{file && previewUrl && (
-					<div className="flex flex-col gap-4">
-						<div className="relative  overflow-hidden rounded-lg border border-base-content/20">
-							<img
-								src={previewUrl}
-								alt="Preview"
-								className="h-full w-full object-contain"
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="image/*"
+								className="hidden"
+								onChange={handleInputChange}
 							/>
 
 							<button
 								type="button"
-								className="btn btn-error btn-sm absolute right-2 top-2 rounded-full"
-								onClick={reset}
+								className="btn btn-primary rounded-full"
+								onClick={() => fileInputRef.current?.click()}
 							>
-								✕
+								Select Image
 							</button>
 						</div>
+					)}
 
-						<p className="text-sm text-base-content/60 text-center">
-							{file.name}
-						</p>
-						{canDownload ? (
-							<button
-								type="button"
-								onClick={() => downloadImage(previewUrl)}
-								className="inline-flex items-center gap-1 btn btn-primary"
-							>
-								<HugeiconsIcon icon={ImageDownload02Icon} />
-								Download
-							</button>
-						) : (
-							<button
-								type="submit"
-								className="btn btn-primary w-full rounded-full"
-							>
-								{isPending ? (
-									<div className="inline-flex items-center gap-1">
-										<HugeiconsIcon
-											icon={Loading03Icon}
-											className="animate-spin"
-										/>
-										<span>Loading...</span>
-									</div>
-								) : (
-									"Remove Background"
-								)}
-							</button>
-						)}
-					</div>
-				)}
-			</form>
+					{file && previewUrl && (
+						<div className="flex flex-col gap-4">
+							<div className="relative  overflow-hidden rounded-lg border border-base-content/20">
+								<img
+									src={previewUrl}
+									alt="Preview"
+									className="h-full w-full object-contain"
+								/>
+
+								<button
+									type="button"
+									className="btn btn-error btn-sm absolute right-2 top-2 rounded-full"
+									onClick={reset}
+								>
+									✕
+								</button>
+							</div>
+
+							{canDownload ? (
+								<button
+									type="button"
+									onClick={() => downloadImage(previewUrl)}
+									className="inline-flex items-center gap-1 btn btn-primary"
+								>
+									<HugeiconsIcon icon={ImageDownload02Icon} />
+									Download
+								</button>
+							) : (
+								<button
+									type="submit"
+									className="btn btn-primary w-full rounded-full"
+								>
+									{isPending ? (
+										<div className="inline-flex items-center gap-1">
+											<HugeiconsIcon
+												icon={Loading03Icon}
+												className="animate-spin"
+											/>
+											<span>Loading...</span>
+										</div>
+									) : (
+										"Remove Background"
+									)}
+								</button>
+							)}
+						</div>
+					)}
+				</form>
+			</div>
 		</div>
 	);
 }
