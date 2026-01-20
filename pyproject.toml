@@ -1,0 +1,15 @@
+[project]
+name = "bg-remover"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "flask>=3.1.2",
+    "numba>=0.63.1",
+    "onnxruntime-gpu>=1.23.2",
+    "rembg[gpu]>=2.0.72",
+    "requests>=2.32.5",
+    "torch>=2.9.1",
+    "transformers>=4.57.5",
+]
