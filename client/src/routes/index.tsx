@@ -7,7 +7,11 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { REMBG_MODEL_OPTIONS } from "@/constants/models";
+import {
+	REMBG_MODEL_OPTIONS,
+	type RembgModel,
+	rembgModelOptionsMap,
+} from "@/constants/models";
 import { downloadImage } from "@/utils/image";
 
 export const Route = createFileRoute("/")({
@@ -21,7 +25,9 @@ function App() {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [canDownload, setCanDownload] = useState(false);
-	const [selectedModel, setSelectedModel] = useState<string | null>(null);
+	const [selectedModel, setSelectedModel] = useState<string>(
+		REMBG_MODEL_OPTIONS[0].value,
+	);
 
 	const handleFile = (file: File) => {
 		if (!file.type.startsWith("image/")) return;
@@ -60,10 +66,7 @@ function App() {
 		mutationFn: async (file: File) => {
 			const formData = new FormData();
 			formData.append("file", file);
-
-			if (selectedModel) {
-				formData.append("model", selectedModel);
-			}
+			formData.append("model", selectedModel);
 
 			const response = await fetch(
 				"http://localhost:8000/api/remove-background",
@@ -96,32 +99,42 @@ function App() {
 
 	return (
 		<div className="min-h-screen items-center justify-center flex w-full">
-			<div className="w-full flex items-end gap-3 flex-col max-w-xl ">
-				<div className="inline-flex justify-between w-full items-center">
-					{file ? (
-						<p className="text-sm text-base-content/60 text-center">
-							{file.name}
-						</p>
-					) : (
-						<div></div>
-					)}
-					<select
-						defaultValue=""
-						className="select h-8 max-w-38 rounded-xl"
-						onChange={(e) => {
-							setSelectedModel(e.target.value);
-						}}
-					>
-						<option value="" disabled>
-							Pick model
-						</option>
-
-						{REMBG_MODEL_OPTIONS.map((option) => (
-							<option key={option.value} value={option.value}>
-								{option.label}
+			<div className="w-full flex items-end gap-3 flex-col max-w-3xl ">
+				<div className="space-y-2 w-full">
+					<div className="inline-flex justify-between w-full items-center">
+						{file ? (
+							<p className="text-sm text-base-content/60 text-center">
+								{file.name}
+							</p>
+						) : (
+							<div></div>
+						)}
+						<select
+							defaultValue={selectedModel}
+							className="select h-8 max-w-38 rounded-xl"
+							onChange={(e) => {
+								setSelectedModel(e.target.value);
+							}}
+						>
+							<option value="" disabled>
+								Pick model
 							</option>
-						))}
-					</select>
+
+							{REMBG_MODEL_OPTIONS.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</select>
+					</div>
+					<div className="border p-2 rounded-lg border-base-content/10">
+						<p className="w-full text-end text-base-content/70">
+							{
+								rembgModelOptionsMap.get(selectedModel as RembgModel)
+									?.description
+							}
+						</p>
+					</div>
 				</div>
 				<form
 					onSubmit={submit}

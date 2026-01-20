@@ -7,7 +7,7 @@ from fastapi import UploadFile
 from core.rembg import RembgModel, get_session
 
 
-def bg_remove(file: UploadFile, model: RembgModel | RembgModel = "u2net"):
+def bg_remove(file: UploadFile, model: RembgModel):
     session = get_session(model)
 
     input_image = Image.open(file.file)
@@ -16,6 +16,9 @@ def bg_remove(file: UploadFile, model: RembgModel | RembgModel = "u2net"):
     img_io = BytesIO()
     output_image.save(img_io, format="PNG")  # type: ignore[call-arg]
     img_io.seek(0)
+
+    print(session, "session")
+    print(model)
 
     return StreamingResponse(
         img_io,
